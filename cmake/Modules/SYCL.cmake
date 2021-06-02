@@ -25,6 +25,10 @@
 include(CheckCXXCompilerFlag)
 include(ConfigureSYCLBLAS)
 
+if(NOT(DEFINED SYCL_BLAS_OPTIMIZATION_FLAG))
+    SET(SYCL_BLAS_OPTIMIZATION_FLAG "-O3" CACHE STRING "Sycl-BLAS default optimization flag -O3")
+endif()
+
 # find_package(hipSYCL) requires HIPSYCL_TARGETS to be set, so set it to a default value before find_package(hipSYCL)
 if(NOT HISPYCL_TARGETS AND NOT ENV{HIPSYCL_TARGETS})
   if(${TARGET} STREQUAL "NVIDIA_GPU")
@@ -70,13 +74,14 @@ else()
 endif()
 
 message(STATUS "Using SYCL implementation: ${SYCL_COMPILER}")
+message(STATUS "Sycl-BLAS optimization flag: ${SYCL_BLAS_OPTIMIZATION_FLAG}")
 
 if(is_computecpp)
   find_package(ComputeCpp REQUIRED)
   # Add some performance flags to the calls to compute++.
   # NB: This must be after finding ComputeCpp
   list(APPEND COMPUTECPP_USER_FLAGS
-    -O3
+    ${SYCL_BLAS_OPTIMIZATION_FLAG}
     -fsycl-split-modules=20
     -mllvm -inline-threshold=10000
     -Xclang -cl-mad-enable
@@ -88,7 +93,7 @@ if(is_computecpp)
   
 elseif(is_dpcpp)
   set(CMAKE_CXX_STANDARD 17)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__SYCL_DISABLE_NAMESPACE_INLINE__=ON -O3 -Xclang -cl-mad-enable")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__SYCL_DISABLE_NAMESPACE_INLINE__=ON ${SYCL_BLAS_OPTIMIZATION_FLAG} -Xclang -cl-mad-enable")
   if(${BACKEND_DEVICE} STREQUAL "DEFAULT_CPU") 
     set(DPCPP_SYCL_TARGET spir64_x86_64-unknown-unknown-sycldevice)
   elseif(${BACKEND_DEVICE} STREQUAL "INTEL_GPU")
@@ -111,7 +116,7 @@ elseif(is_dpcpp)
   get_target_property(SYCL_INCLUDE_DIRS DPCPP::DPCPP INTERFACE_INCLUDE_DIRECTORIES)
 elseif(is_hipsycl)
   set(CMAKE_CXX_STANDARD 17)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SYCL_BLAS_OPTIMIZATION_FLAG}")
   get_target_property(SYCL_INCLUDE_DIRS hipSYCL::hipSYCL-rt INTERFACE_INCLUDE_DIRECTORIES)
   if(NOT ${BLAS_ENABLE_BENCHMARK})
     # hipSYCL currently does not support queue profiling. Thus disable benchmarks by default.

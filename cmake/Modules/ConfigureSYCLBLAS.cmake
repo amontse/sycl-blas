@@ -60,7 +60,9 @@ if(NAIVE_GEMM)
 endif()
 
 # the TARGET variable defines the platform for which the sycl library is built
+if(NOT(DEFINED TARGET))
 SET(TARGET "DEFAULT_CPU" CACHE STRING "Default Platform 'DEFAULT_CPU'")
+endif()
 SET(BACKEND_DEVICE ${TARGET})
 message(STATUS "${TARGET} is chosen as a backend platform")
 

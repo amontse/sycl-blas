@@ -58,6 +58,7 @@ function(add_sycl_to_target)
   )
   target_compile_options(${SB_ADD_SYCL_TARGET} PUBLIC -fsycl
                           PUBLIC -fsycl-targets=${DPCPP_SYCL_TARGET})
+  target_compile_definitions(${SB_ADD_SYCL_TARGET} PUBLIC ${TARGET})
   get_target_property(target_type ${SB_ADD_SYCL_TARGET} TYPE)
   if (NOT target_type STREQUAL "OBJECT_LIBRARY")
     target_link_options(${SB_ADD_SYCL_TARGET} PUBLIC -fsycl
